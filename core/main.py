@@ -86,7 +86,6 @@ def retrieve_name_detail(
     name_id: int = Path(
         title="Object id",
         description="the id of the name in name_list",
-        alias="object_id",
     ),
 ):
     for name in names_list:
