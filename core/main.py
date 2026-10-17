@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 import random
 from typing import List
 
 from fastapi import (
+    Body,
     FastAPI,
     File,
     Form,
@@ -14,20 +14,6 @@ from fastapi import (
     status,
 )
 from fastapi.responses import JSONResponse
-
-from schemas import PersonCreateSchema, PersonResponseSchema, PersonUpdateSchema
-
-
-@dataclass
-class Student:
-    name: str
-    age: int
-
-
-@dataclass
-class StudentResponse:
-    id: int
-    name: str
 
 
 @asynccontextmanager
@@ -64,7 +50,7 @@ def root():
     return {"message": "Hello World!"}
 
 
-@app.get("/names", response_model=List[PersonResponseSchema])
+@app.get("/names")
 def retrieve_names_list(
     q: str | None = Query(
         alias="search",
@@ -81,7 +67,7 @@ def retrieve_names_list(
     return names_list
 
 
-@app.get("/names/{name_id}", response_model=PersonResponseSchema)
+@app.get("/names/{name_id}")
 def retrieve_name_detail(
     name_id: int = Path(
         title="Object id",
@@ -96,38 +82,18 @@ def retrieve_name_detail(
     )
 
 
-# @app.post(
-#     "/names",
-#     status_code=status.HTTP_201_CREATED,
-#     response_model=PersonResponseSchema,
-# )
-# def create_names(person: PersonCreateSchema):
-#     name_obj = {"id": random.randint(6, 100), "name": person.name}
-#     names_list.append(name_obj)
-#     return name_obj
-from fastapi import Form
-
-@app.post(
-    "/names",
-    status_code=status.HTTP_201_CREATED,
-    response_model=PersonResponseSchema,
-)
-def create_names(name: str = Form(...)):
+@app.post("/names", status_code=status.HTTP_201_CREATED)
+def create_names(name: str = Body(embed=True)):
     name_obj = {"id": random.randint(6, 100), "name": name}
     names_list.append(name_obj)
     return name_obj
 
 
-
-@app.put(
-    "/names/{name_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=PersonResponseSchema,
-)
-def update_name_detail(person: PersonUpdateSchema, name_id: int = Path()):
+@app.put("/names/{name_id}", status_code=status.HTTP_200_OK)
+def update_name_detail(name_id: int = Path(), name: str = Form()):
     for item in names_list:
         if item["id"] == name_id:
-            item["name"] = person.name
+            item["name"] = name
             return item
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail="Object not found"
@@ -164,15 +130,12 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @app.post("/upload_multiple/")
-async def upload_multiple(files: List[UploadFile] = File(...)):
-    result = []
-    for file in files:
-        content = await file.read()
-        result.append(
-            {
-                "file_name": file.filename,
-                "content_type": file.content_type,
-                "file_size": len(content),
-            }
-        )
-    return result
+async def upload_multiple(files: list[UploadFile]):
+    return [
+        {
+            "file_name": file.filename,
+            "content_type": file.content_type,
+            "file_size": file.size,
+        }
+        for file in files
+    ]
