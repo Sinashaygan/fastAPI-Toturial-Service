@@ -8,3 +8,6 @@ class PersonCreateSchema(BaseModel):
 class PersonResponseSchema(BaseModel):
     id: int
     name: str
+
+class PersonUpdateSchema(BaseModel):
+    name: str

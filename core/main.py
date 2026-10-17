@@ -15,7 +15,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
-from schemas import PersonCreateSchema, PersonResponseSchema
+from schemas import PersonCreateSchema, PersonResponseSchema, PersonUpdateSchema
 
 
 @dataclass
@@ -113,7 +113,7 @@ def create_names(name: PersonCreateSchema.name):
     status_code=status.HTTP_200_OK,
     response_model=PersonResponseSchema,
 )
-def update_name_detail(name_id: int = Path(), name: str = Form()):
+def update_name_detail(name: PersonUpdateSchema.name, name_id: int = Path()):
     for item in names_list:
         if item["id"] == name_id:
             item["name"] = name
