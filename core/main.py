@@ -14,7 +14,6 @@ names_list = [
 ]
 
 # /names (GET(RETRIEVE), POST(CREATE))
-
 # /names/{id} (GET(RETRIEVE), PUT/PATCH(UPDATE), DELETE)
 
 
@@ -24,10 +23,9 @@ def root():
 
 
 @app.get("/names")
-def retrieve_names_list(q: Annotated[str | None, Query(max_length=50)]):
+def retrieve_names_list(q: Annotated[str | None, Query(max_length=50)] = None):
     if q:
         return [item for item in names_list if item["name"] == q]
-
     return names_list
 
 
@@ -36,7 +34,6 @@ def retrieve_name_detail(name_id: int):
     for name in names_list:
         if name["id"] == name_id:
             return name
-
     return {"detail": "Object not found!"}
 
 
@@ -56,7 +53,8 @@ def update_name_detail(name_id: int, name: str):
     return {"detail": "object not found!"}
 
 
-@app.delete("names/{name_id}")
+# اسلش اول اضافه شد: /names/{name_id}
+@app.delete("/names/{name_id}")
 def delete_name_detail(name_id: int):
     for item in names_list:
         if item["id"] == name_id:
