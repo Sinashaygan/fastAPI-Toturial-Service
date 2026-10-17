@@ -1,3 +1,5 @@
+import random
+
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -19,14 +21,23 @@ names_list = [
 def root():
     return {"message": "Hello World!"}
 
+
 @app.get("/names")
 def retrieve_names_list():
-    return names_list 
+    return names_list
 
-@app.get('/names/{name_id}')
-def retrieve_name_detail(name_id:int):
+
+@app.get("/names/{name_id}")
+def retrieve_name_detail(name_id: int):
     for name in names_list:
-        if name['id'] == name_id:
+        if name["id"] == name_id:
             return name
 
-    return{"detail" : "Object not found!"}
+    return {"detail": "Object not found!"}
+
+
+@app.post("/names")
+def create_names(name: str):
+    name_obj = {"id": random.randint(6, 100), "name": name}
+    names_list.append(name_obj)
+    return name_obj
