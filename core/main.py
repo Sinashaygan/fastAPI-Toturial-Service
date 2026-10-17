@@ -64,7 +64,7 @@ def root():
     return {"message": "Hello World!"}
 
 
-@app.get("/names", response_model=PersonResponseSchema)
+@app.get("/names", response_model=List[PersonResponseSchema])
 def retrieve_names_list(
     q: str | None = Query(
         alias="search",
@@ -102,8 +102,8 @@ def retrieve_name_detail(
     status_code=status.HTTP_201_CREATED,
     response_model=List[PersonResponseSchema],
 )
-def create_names(name: PersonCreateSchema.name):
-    name_obj = {"id": random.randint(6, 100), "name": name}
+def create_names(person: PersonCreateSchema):
+    name_obj = {"id": random.randint(6, 100), "name": person.name}
     names_list.append(name_obj)
     return name_obj
 
@@ -113,10 +113,10 @@ def create_names(name: PersonCreateSchema.name):
     status_code=status.HTTP_200_OK,
     response_model=PersonResponseSchema,
 )
-def update_name_detail(name: PersonUpdateSchema.name, name_id: int = Path()):
+def update_name_detail(person: PersonUpdateSchema, name_id: int = Path()):
     for item in names_list:
         if item["id"] == name_id:
-            item["name"] = name
+            item["name"] = person.name
             return item
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail="Object not found"
@@ -153,12 +153,15 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @app.post("/upload_multiple/")
-async def upload_multiple(files: list[UploadFile]):
-    return [
-        {
-            "file_name": file.filename,
-            "content_type": file.content_type,
-            "file_size": file.size,
-        }
-        for file in files
-    ]
+async def upload_multiple(files: List[UploadFile] = File(...)):
+    result = []
+    for file in files:
+        content = await file.read()
+        result.append(
+            {
+                "file_name": file.filename,
+                "content_type": file.content_type,
+                "file_size": len(content),
+            }
+        )
+    return result
