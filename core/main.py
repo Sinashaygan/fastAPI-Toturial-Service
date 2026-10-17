@@ -24,7 +24,15 @@ def root():
 
 @app.get("/names")
 def retrieve_names_list(
-    q: str | None = Query(alias="search", title="search", default=None, max_length=50),
+    q: str | None = Query(
+        alias="search",
+        title="search",
+        description="it will searched with the title you provide",
+        example="sina",
+        default=None,
+        max_length=50,
+        deprecated=True
+    ),
 ):
     if q:
         return [item for item in names_list if item["name"] == q]
