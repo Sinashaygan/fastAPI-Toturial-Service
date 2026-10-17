@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import random
 from typing import List
 
@@ -14,7 +15,14 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Application startup")
+    yield
+    print("Application shutdown")
+    
+app = FastAPI(lifespan=lifespan)
 
 names_list = [
     {"id": 1, "name": "ali"},
@@ -26,6 +34,14 @@ names_list = [
 
 # /names (GET(RETRIEVE), POST(CREATE))
 # /names/{id} (GET(RETRIEVE), PUT/PATCH(UPDATE), DELETE)
+
+# @app.on_event("startup")
+# async def startup_event():
+#     print("shutting down the application")
+
+# @app.on_event("startup")
+# async def startup_event():
+#     print("Starting the application")
 
 
 @app.get("/")
@@ -123,3 +139,4 @@ async def upload_multiple(files: list[UploadFile]):
         }
         for file in files
     ]
+ 
