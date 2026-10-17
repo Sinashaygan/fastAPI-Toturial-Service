@@ -1,4 +1,5 @@
 import random
+from typing import List
 
 from fastapi import (
     Body,
@@ -110,3 +111,15 @@ async def upload_file(file: UploadFile = File(...)):
         "content_type": file.content_type,
         "file_size": len(content),
     }
+
+
+@app.post("/upload_multiple/")
+async def upload_multiple(files: list[UploadFile]):
+    return [
+        {
+            "file_name": file.filename,
+            "content_type": file.content_type,
+            "file_size": file.size,
+        }
+        for file in files
+    ]
