@@ -1,13 +1,24 @@
 from fastapi import FastAPI
-import uvicorn
 
 app = FastAPI()
+
+names_list = [
+    {"id": 1, "name": "ali"},
+    {"id": 2, "name": "maryam"},
+    {"id": 3, "name": "arousha"},
+    {"id": 4, "name": "aziz"},
+    {"id": 5, "name": "zahra"},
+]
+
+# /names (GET(RETRIEVE), POST(CREATE))
+
+# /names/{id} (GET(RETRIEVE), PUT/PATCH(UPDATE), DELETE)
 
 
 @app.get("/")
 def root():
-    return {"message": "JJ"}
+    return {"message": "Hello World!"}
 
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/names")
+def retrieve_names_list():
+    return names_list 
