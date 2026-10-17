@@ -2,6 +2,7 @@ import random
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -57,7 +58,6 @@ def update_name_detail(name_id: int, name: str):
     )
 
 
-# اسلش اول اضافه شد: /names/{name_id}
 @app.delete("/names/{name_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_name_detail(name_id: int):
     for item in names_list:
@@ -66,4 +66,11 @@ def delete_name_detail(name_id: int):
             return {"detail": "Object remove successfully"}
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail="Object not found"
+    )
+
+
+@app.get("/")
+def root():
+    return JSONResponse(
+        content={"message": " Hello World!"}, status_code=status.HTTP_202_ACCEPTED
     )
