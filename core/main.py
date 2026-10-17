@@ -97,15 +97,27 @@ def retrieve_name_detail(
     )
 
 
+# @app.post(
+#     "/names",
+#     status_code=status.HTTP_201_CREATED,
+#     response_model=PersonResponseSchema,
+# )
+# def create_names(person: PersonCreateSchema):
+#     name_obj = {"id": random.randint(6, 100), "name": person.name}
+#     names_list.append(name_obj)
+#     return name_obj
+from fastapi import Form
+
 @app.post(
     "/names",
     status_code=status.HTTP_201_CREATED,
-    response_model=List[PersonResponseSchema],
+    response_model=PersonResponseSchema,
 )
-def create_names(person: PersonCreateSchema):
-    name_obj = {"id": random.randint(6, 100), "name": person.name}
+def create_names(name: str = Form(...)):
+    name_obj = {"id": random.randint(6, 100), "name": name}
     names_list.append(name_obj)
     return name_obj
+
 
 
 @app.put(
