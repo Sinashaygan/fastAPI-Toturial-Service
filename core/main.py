@@ -23,6 +23,12 @@ class Student:
     age: int
 
 
+@dataclass
+class StudentResponse:
+    id: int
+    name: str
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application startup")
@@ -90,7 +96,7 @@ def retrieve_name_detail(
     )
 
 
-@app.post("/names", status_code=status.HTTP_201_CREATED)
+@app.post("/names", status_code=status.HTTP_201_CREATED, response_model=StudentResponse)
 def create_names(name: Student = Body(embed=True)):
     name_obj = {"id": random.randint(6, 100), "name": name}
     names_list.append(name_obj)
