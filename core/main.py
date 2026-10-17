@@ -1,6 +1,7 @@
 import random
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 
 app = FastAPI()
 
@@ -23,10 +24,10 @@ def root():
 
 
 @app.get("/names")
-def retrieve_names_list(q:str):
+def retrieve_names_list(q: Annotated[str | None, Query(max_length=50)]):
     if q:
         return [item for item in names_list if item["name"] == q]
-    
+
     return names_list
 
 
