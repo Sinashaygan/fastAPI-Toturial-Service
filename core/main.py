@@ -43,10 +43,19 @@ def create_names(name: str):
     return name_obj
 
 
-@app.put("/names")
+@app.put("/names/{name_id}")
 def update_name_detail(name_id: int, name: str):
     for item in names_list:
         if item["id"] == name_id:
             item["name"] = name
             return item
     return {"detail": "object not found!"}
+
+
+@app.delete("names/{name_id}")
+def delete_name_detail(name_id: int):
+    for item in names_list:
+        if item["id"] == name_id:
+            names_list.remove(item)
+            return {"detail": "Object remove successfully"}
+    return {"detail": "Object not found!"}
