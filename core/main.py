@@ -1,6 +1,6 @@
 import random
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
@@ -31,7 +31,7 @@ def retrieve_names_list(
         example="sina",
         default=None,
         max_length=50,
-        deprecated=True
+        deprecated=True,
     ),
 ):
     if q:
@@ -40,7 +40,13 @@ def retrieve_names_list(
 
 
 @app.get("/names/{name_id}")
-def retrieve_name_detail(name_id: int):
+def retrieve_name_detail(
+    name_id: int = Path(
+        title="Object id",
+        description="the id of the name in name_list",
+        alias="object_id",
+    ),
+):
     for name in names_list:
         if name["id"] == name_id:
             return name
