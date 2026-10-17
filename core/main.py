@@ -1,5 +1,4 @@
 import random
-from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.responses import JSONResponse
@@ -24,7 +23,9 @@ def root():
 
 
 @app.get("/names")
-def retrieve_names_list(q: Annotated[str | None, Query(max_length=50)] = None):
+def retrieve_names_list(
+    q: str | None = Query(alias="search", title="search", default=None, max_length=50),
+):
     if q:
         return [item for item in names_list if item["name"] == q]
     return names_list
