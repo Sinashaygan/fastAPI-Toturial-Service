@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 import random
 from typing import List
 
@@ -16,12 +17,19 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 
 
+@dataclass
+class Student:
+    name: str
+    age: int
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application startup")
     yield
     print("Application shutdown")
-    
+
+
 app = FastAPI(lifespan=lifespan)
 
 names_list = [
@@ -83,7 +91,7 @@ def retrieve_name_detail(
 
 
 @app.post("/names", status_code=status.HTTP_201_CREATED)
-def create_names(name: str = Body(embed=True)):
+def create_names(name: Student = Body(embed=True)):
     name_obj = {"id": random.randint(6, 100), "name": name}
     names_list.append(name_obj)
     return name_obj
@@ -139,4 +147,3 @@ async def upload_multiple(files: list[UploadFile]):
         }
         for file in files
     ]
- 
