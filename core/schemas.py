@@ -1,8 +1,8 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 
 class BasePersonSchema(BaseModel):
-    name: str
+    name: str = Field(..., description="Enter person name")
 
     @field_validator("name")
     @classmethod
@@ -17,13 +17,17 @@ class BasePersonSchema(BaseModel):
 
         return value.title()
 
+    @field_serializer
+    def serialize_name(value):
+        return value.title()
+
 
 class PersonCreateSchema(BasePersonSchema):
     pass
 
 
 class PersonResponseSchema(BasePersonSchema):
-    id: int
+    id: int = Field(... , description="Unique user identifier")
 
 
 class PersonUpdateSchema(BasePersonSchema):
