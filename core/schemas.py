@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 
 class BasePersonSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str = Field(..., description="Enter person name")
 
     @field_validator("name")
