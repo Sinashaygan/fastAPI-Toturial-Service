@@ -1,25 +1,18 @@
 from contextlib import asynccontextmanager
-import random
 from typing import Annotated, List
 
-from fastapi import (
-    Body,
-    FastAPI,
-    File,
-    Form,
-    HTTPException,
-    Path,
-    Query,
-    UploadFile,
-    status,
-)
+from fastapi import Depends, FastAPI, File, HTTPException, Path, Query, UploadFile, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
+from database import Base, engine, get_db
+from models import Person
 from schemas import PersonCreateSchema, PersonResponseSchema, PersonUpdateSchema
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
     print("Application startup")
     yield
     print("Application shutdown")
@@ -27,119 +20,66 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-names_list = [
-    {"id": 1, "name": "ali"},
-    {"id": 2, "name": "maryam"},
-    {"id": 3, "name": "arousha"},
-    {"id": 4, "name": "aziz"},
-    {"id": 5, "name": "zahra"},
-]
-
-# /names (GET(RETRIEVE), POST(CREATE))
-# /names/{id} (GET(RETRIEVE), PUT/PATCH(UPDATE), DELETE)
-
-# @app.on_event("startup")
-# async def startup_event():
-#     print("shutting down the application")
-
-# @app.on_event("startup")
-# async def startup_event():
-#     print("Starting the application")
-
 
 @app.get("/names", response_model=List[PersonResponseSchema])
 def retrieve_names_list(
-    q: str | None = Query(
-        alias="search",
-        title="search",
-        description="it will searched with the title you provide",
-        example="sina",
-        default=None,
-        max_length=50,
-        deprecated=True,
-    ),
+    q: str | None = Query(alias="search", title="search", description="it will searched with the title you provide", example="sina", default=None, max_length=50, deprecated=True),
+    db: Session = Depends(get_db),
 ):
+    query = db.query(Person)
     if q:
-        return [item for item in names_list if item["name"] == q]
-    return names_list
+        query = query.filter(Person.name == q)
+    return query.all()
 
 
 @app.get("/names/{name_id}", response_model=PersonResponseSchema)
-def retrieve_name_detail(
-    name_id: int = Path(
-        title="Object id",
-        description="the id of the name in name_list",
-    ),
-):
-    for name in names_list:
-        if name["id"] == name_id:
-            return name
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Object not found"
-    )
+def retrieve_name_detail(name_id: int = Path(title="Object id", description="the id of the name in name_list"), db: Session = Depends(get_db)):
+    person = db.get(Person, name_id)
+    if person is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Object not found")
+    return person
 
 
-@app.post(
-    "/names", status_code=status.HTTP_201_CREATED, response_model=PersonResponseSchema
-)
-def create_names(person: PersonCreateSchema):
-    name_obj = {"id": random.randint(6, 100), "name": person.name}
-    names_list.append(name_obj)
-    return name_obj
+@app.post("/names", status_code=status.HTTP_201_CREATED, response_model=PersonResponseSchema)
+def create_names(person: PersonCreateSchema, db: Session = Depends(get_db)):
+    person_obj = Person(name=person.name)
+    db.add(person_obj)
+    db.commit()
+    db.refresh(person_obj)
+    return person_obj
 
 
-@app.put(
-    "/names/{name_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=PersonResponseSchema,
-)
-def update_name_detail(person: PersonUpdateSchema, name_id: int = Path()):
-    for item in names_list:
-        if item["id"] == name_id:
-            item["name"] = person.name
-            return item
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Object not found"
-    )
+@app.put("/names/{name_id}", status_code=status.HTTP_200_OK, response_model=PersonResponseSchema)
+def update_name_detail(person: PersonUpdateSchema, name_id: int = Path(), db: Session = Depends(get_db)):
+    person_obj = db.get(Person, name_id)
+    if person_obj is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Object not found")
+    person_obj.name = person.name
+    db.commit()
+    db.refresh(person_obj)
+    return person_obj
 
 
 @app.delete("/names/{name_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_name_detail(name_id: int):
-    for item in names_list:
-        if item["id"] == name_id:
-            names_list.remove(item)
-            return {"detail": "Object remove successfully"}
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Object not found"
-    )
+def delete_name_detail(name_id: int, db: Session = Depends(get_db)):
+    person = db.get(Person, name_id)
+    if person is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Object not found")
+    db.delete(person)
+    db.commit()
 
 
 @app.get("/")
 def root():
-    return JSONResponse(
-        content={"message": " Hello World!"}, status_code=status.HTTP_202_ACCEPTED
-    )
+    return JSONResponse(content={"message": " Hello World!"}, status_code=status.HTTP_202_ACCEPTED)
 
 
 @app.post("/upload_file/")
 async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
-    print(file.__dict__)
-    return {
-        "file_name": file.filename,
-        "content_type": file.content_type,
-        "file_size": len(content),
-    }
+    return {"file_name": file.filename, "content_type": file.content_type, "file_size": len(content)}
 
 
 @app.post("/upload_multiple/")
-async def upload_multiple(
-    files: Annotated[List[UploadFile], File(description="چندین فایل را انتخاب کنید")],
-):
-    return [
-        {
-            "file_name": file.filename,
-            "content_type": file.content_type,
-        }
-        for file in files
-    ]
+async def upload_multiple(files: Annotated[List[UploadFile], File(description="چندین فایل را انتخاب کنید")]):
+    return [{"file_name": file.filename, "content_type": file.content_type} for file in files]
