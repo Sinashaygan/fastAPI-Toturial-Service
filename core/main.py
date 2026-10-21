@@ -47,11 +47,6 @@ names_list = [
 #     print("Starting the application")
 
 
-@app.get("/")
-def root():
-    return {"message": "Hello World!"}
-
-
 @app.get("/names", response_model=List[PersonResponseSchema])
 def retrieve_names_list(
     q: str | None = Query(
