@@ -8,7 +8,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     first_name = Column(String(30))
-    last_name = Column(String(30))
+    last_name = Column(String(30), nullable=True)
     age = Column(Integer)
 
     def __repr__(self):
